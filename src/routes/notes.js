@@ -1,15 +1,15 @@
 const express = require('express');
 const router = express.Router();
 
-
 // Models
 const Note = require('../models/Note');
+const { isAuthenticated } = require('../helpers/auth');
 
-router.get('/notes/add', function(req, res){
+router.get('/notes/add', isAuthenticated, function(req, res){
     res.render('notes/new-note');
 });
 
-router.post('/notes/new-note', async function(req, res){
+router.post('/notes/new-note', isAuthenticated, async function(req, res){
     const { title, description } = req.body;
     const errors = []
 
@@ -29,26 +29,34 @@ router.post('/notes/new-note', async function(req, res){
         })
     }else{
         const newNote = new Note({ title, description });
+        newNote.user = req.user.id;
         await newNote.save();
+        req.flash('success_msg', 'Note added successfully');
         res.redirect('/notes');
     } 
 });
 
-router.get('/notes', async function(req, res){
-    // const notas = await Note.find().sort( { date: 'desc'} );
-    const notas = await Note.find();
+router.get('/notes', isAuthenticated, async function(req, res){
+    const notas = await Note.find({ user: req.user.id }).sort( { date: 'desc'} );
     res.render('notes/all-notes', { notas });
 });
 
-router.get('/notes/edit/:id', async function (req, res){
+router.get('/notes/edit/:id', isAuthenticated, async function (req, res){
     const nota = await Note.findById(req.params.id);
     res.render('notes/edit-note', { nota });
 });
 
-router.put('/notes/edit-note/:id', async (req, res) => {
+router.put('/notes/edit-note/:id', isAuthenticated, async (req, res) => {
     const { title, description } = req.body;
     await Note.findByIdAndUpdate(req.params.id, { title, description });
+    req.flash('success_msg', 'Note update successfully');
     res.redirect('/notes'); 
 });
+
+router.delete('/notes/delete/:id', isAuthenticated, async function(req, res){
+    await Note.findByIdAndDelete(req.params.id);
+    req.flash('success_msg', 'Note delete successfully');
+    res.redirect('/notes');
+})
 
 module.exports = router;
