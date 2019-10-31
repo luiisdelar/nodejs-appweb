@@ -5,12 +5,17 @@ const methodOverride = require('method-override');
 const session = require('express-session');
 const flash = require('connect-flash');
 const passport = require('passport');
+const mongoose = require('mongoose');
 
 // Initializations
 const app = express();
 const db = require('./database');
 require('./config/passport');
 
+//conectandose a base de datos
+mongoose.connect('mongodb+srv://luis-mongo:<mrscyberLu1s>@luis-vqliq.mongodb.net/test?retryWrites=true&w=majority')
+.then( db => console.log('db is connected '))
+.catch( err => console.log(err));
 
 // Settings
 app.set('port', process.env.PORT || 3000);
